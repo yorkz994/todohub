@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            python: "3.9"
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.13"
+          - os: macos-latest
+            python: "3.13"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Smoke test
+        run: |
+          python3 tests/test_smoke.py
+          python3 tests/test_audit.py
+      - name: Demo data
+        run: |
+          python3 scripts/demo.py --dir "$RUNNER_TEMP/demo" --no-serve
+          HUB_ROOT="$RUNNER_TEMP/demo" python3 hub status
+      - name: Shell syntax
+        run: for f in install.sh uninstall.sh widget/build.sh scripts/*.sh; do bash -n "$f"; done
+
+  privacy-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: No personal data, tokens or local paths in files or history
+        run: python3 scripts/audit_public.py --tracked --history
+
+  widget:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compile menu-bar app
+        run: bash widget/build.sh --no-launch

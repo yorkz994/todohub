@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""Todo Hub 命令行入口。可以软链到 PATH 里任何位置。"""
+import os
+import sys
+
+root = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, root)
+os.environ.setdefault("HUB_ROOT", root)
+from todohub.cli import main  # noqa: E402
+
+main()

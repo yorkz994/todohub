@@ -1,0 +1,62 @@
+{
+ "_note": "Example config. Put your own settings in config/hub.local.json (git-ignored); keys there override these. 示例配置；个人设置写在 config/hub.local.json（不进仓库），会覆盖同名项。",
+ "timezone": "UTC",
+ "port": 8791,
+ "my_github_owners": [],
+ "reminders": {
+  "enabled": true,
+  "list": "Todo Hub",
+  "import_untracked": true,
+  "adopt_lists": []
+ },
+ "sources": {
+  "codex_sessions": "~/.codex/sessions",
+  "claude_code_projects": "~/.claude/projects"
+ },
+ "scan_roots": [
+  {
+   "path": "~/code",
+   "depth": 4
+  },
+  {
+   "path": "~",
+   "depth": 2
+  }
+ ],
+ "dispatch": {
+  "mode": "auto",
+  "max_runs_per_day": 20,
+  "timeout_min": 60
+ },
+ "intervals_min": {
+  "collect": 30,
+  "reminders": 10,
+  "screener": 360,
+  "runner": 1
+ },
+ "stale_days": 14,
+ "scan_exclude": [
+  "Desktop",
+  "Documents",
+  "Downloads",
+  "Library",
+  "node_modules",
+  ".Trash",
+  ".cache",
+  ".npm",
+  ".bun",
+  "Pictures",
+  "Music",
+  "Movies",
+  "venv",
+  ".venv",
+  "site-packages",
+  "__pycache__",
+  "dist",
+  "build",
+  ".git"
+ ],
+ "widget": {
+  "autostart": true
+ }
+}

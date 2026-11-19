@@ -1,0 +1,10 @@
+{
+ "owner_name": "Alex",
+ "actor": "alex",
+ "timezone": "Europe/Berlin",
+ "my_github_owners": ["your-github-name"],
+ "reminders": {"list": "Todo Hub", "adopt_lists": []},
+ "scan_roots": [{"path": "~/code", "depth": 4}, {"path": "~", "depth": 2}],
+ "extra_app_words": [],
+ "dispatch": {"mode": "review", "max_runs_per_day": 10, "timeout_min": 60}
+}

@@ -1,0 +1,7 @@
+# Words that must never appear in your public repo, one per line (case-insensitive).
+# ASCII words match whole words; CJK terms match anywhere. Copy to private-words.local.txt.
+# 不允许出现在公开仓库里的词，一行一个。复制为 private-words.local.txt 后编辑。
+Alex Example
+alex@example.org
+Example Corp
+secret-project-name

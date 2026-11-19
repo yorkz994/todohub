@@ -1,0 +1,19 @@
+# 个人数据和运行产物不进仓库：事件、会话摘要、周复盘、日志、派单记录
+data/
+inbox/
+reviews/
+logs/
+swarm/
+workspace/
+# 本机编译产物
+widget/build/
+__pycache__/
+*.pyc
+.DS_Store
+.write_probe
+COMMIT_MSG
+# 个人配置和约定：只留在本机（示例版本在仓库里）
+*.local.json
+*.local.md
+*.local.txt
+*.local

@@ -1,0 +1,106 @@
+{
+  "claude": {
+    "label": "Claude（编排者）",
+    "kind": "orchestrator"
+  },
+  "codex": {
+    "label": "Codex",
+    "kind": "cli",
+    "enabled": true,
+    "cmd": [
+      "codex",
+      "exec",
+      "--sandbox",
+      "workspace-write",
+      "--skip-git-repo-check",
+      "-C",
+      "{cwd}",
+      "-o",
+      "{out}",
+      "{prompt}"
+    ]
+  },
+  "claude-code": {
+    "label": "Claude Code",
+    "kind": "cli",
+    "enabled": true,
+    "cmd": [
+      "claude",
+      "-p",
+      "{prompt}",
+      "--permission-mode",
+      "acceptEdits"
+    ]
+  },
+  "grokbot": {
+    "label": "Grok Bot",
+    "kind": "mailbox",
+    "enabled": true
+  },
+  "local": {
+    "label": "端侧模型",
+    "kind": "cli",
+    "enabled": false,
+    "model": "qwen3:14b",
+    "cmd": [
+      "ollama",
+      "run",
+      "{model}",
+      "{prompt}"
+    ]
+  },
+  "hub-reminders-dump": {
+    "label": "本机维护：导出提醒事项",
+    "kind": "cli",
+    "enabled": true,
+    "maintenance": true,
+    "cmd": [
+      "python3",
+      "{root}/hub",
+      "reminders",
+      "dump"
+    ]
+  },
+  "hub-restart": {
+    "label": "本机维护：重启常驻服务",
+    "kind": "cli",
+    "enabled": true,
+    "maintenance": true,
+    "cmd": [
+      "/bin/sh",
+      "-c",
+      "sleep 2; launchctl kickstart -k gui/$(id -u)/com.todohub.daemon"
+    ]
+  },
+  "hub-widget-build": {
+    "label": "本机维护：编译并启动菜单栏插件",
+    "kind": "cli",
+    "enabled": true,
+    "maintenance": true,
+    "cmd": [
+      "/bin/bash",
+      "{root}/widget/build.sh"
+    ]
+  },
+  "hub-git-publish": {
+    "label": "本机维护：提交并推送到 GitHub",
+    "kind": "cli",
+    "enabled": true,
+    "maintenance": true,
+    "cmd": [
+      "/bin/bash",
+      "{root}/scripts/publish.sh"
+    ]
+  },
+  "hub-gh-check": {
+    "label": "本机维护：体检 GitHub 命令行工具（只读）",
+    "kind": "cli",
+    "enabled": true,
+    "maintenance": true,
+    "cmd": [
+      "/bin/bash",
+      "{root}/scripts/install-gh.sh",
+      "--check"
+    ]
+  }
+}

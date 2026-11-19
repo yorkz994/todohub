@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo Hub</title>
+<style>
+:root{
+  --fog:#EEF1F4; --paper:#FFFFFF; --ink:#16202B; --soft:#5E6B7A; --line:#D5DBE2; --wash:#F6F8FA;
+  --research:#2F6FED; --invest:#0E8F6E; --bd:#B4601A; --coding:#7A4CD9; --personal:#C23B6B;
+  --alert:#C8321F; --ok:#0E8F6E; --focus:#2F6FED;
+}
+@media (prefers-color-scheme:dark){:root{
+  --fog:#10161D; --paper:#18212B; --ink:#E6ECF2; --soft:#93A1B1; --line:#2A3642; --wash:#141C25;
+  --research:#6C9BFF; --invest:#3CC7A2; --bd:#E39A52; --coding:#A98BF5; --personal:#EE7FA6; --alert:#FF7A66; --ok:#3CC7A2;
+}}
+*{box-sizing:border-box}
+html{font-size:14px}
+body{margin:0;background:var(--fog);color:var(--ink);font-family:"Avenir Next","PingFang SC","Hiragino Sans GB",system-ui,sans-serif;line-height:1.55;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.shell{display:grid;grid-template-columns:168px minmax(0,1fr);min-height:100vh}
+.rail{padding:22px 14px;border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+.brand{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;margin:0 8px 2px}
+.when{color:var(--soft);margin:0 8px 18px;font-size:.93rem}
+.tab{display:flex;justify-content:space-between;align-items:center;width:100%;padding:7px 10px;border:0;border-radius:6px;background:none;text-align:left;cursor:pointer}
+.tab:hover{background:var(--wash)}
+.tab[aria-selected=true]{background:var(--ink);color:var(--fog)}
+.tab .n{font-size:.86rem;opacity:.75}
+.rail-foot{margin-top:auto;color:var(--soft);font-size:.86rem;padding:0 8px}
+.rail-foot button{display:block;margin-top:6px}
+main{padding:26px 30px 60px;max-width:1180px}
+h1{font-size:1.5rem;margin:0 0 4px;font-weight:700}
+h2{font-size:1.07rem;margin:26px 0 8px;font-weight:700}
+.lede{color:var(--soft);margin:0 0 18px;max-width:64ch}
+.cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:30px;align-items:start}
+.btn{padding:5px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper);cursor:pointer;white-space:nowrap}
+a{color:inherit;text-underline-offset:2px}
+.hidden-date{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+.btn:hover{border-color:var(--soft)}
+.btn.solid{background:var(--ink);color:var(--fog);border-color:var(--ink)}
+.btn.quiet{border-color:transparent;background:none;color:var(--soft);padding:2px 6px}
+.btn.quiet:hover{color:var(--ink)}
+.field{padding:6px 9px;border:1px solid var(--line);border-radius:6px;background:var(--paper);min-width:0}
+.add{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.add .grow{flex:1 1 220px}
+.add.stack .grow{flex-basis:100%}
+.add.stack select{flex:1 1 160px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c,var(--soft));flex:none}
+.research{--c:var(--research)} .invest{--c:var(--invest)} .bd{--c:var(--bd)} .coding{--c:var(--coding)} .personal{--c:var(--personal)}
+.bucket{margin:0 0 4px;color:var(--soft);font-size:.93rem;font-weight:600}
+.bucket.late{color:var(--alert)}
+.todo{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:start;padding:7px 10px;background:var(--paper);border:1px solid var(--line);border-radius:6px;margin-bottom:5px}
+.todo input[type=checkbox]{width:16px;height:16px;margin:3px 0 0;accent-color:var(--ink)}
+.todo .t{overflow-wrap:anywhere}
+.todo.done .t{color:var(--soft);text-decoration:line-through}
+.todo .sub{color:var(--soft);font-size:.9rem;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.todo .due{font-size:.9rem;color:var(--soft);white-space:nowrap}
+.todo.late .due{color:var(--alert);font-weight:600}
+.tag{font-size:.82rem;padding:0 6px;border:1px solid var(--line);border-radius:4px;color:var(--soft);white-space:nowrap}
+.tag.hot{border-color:var(--alert);color:var(--alert)}
+.gap{margin-bottom:16px}
+.strip{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:6px;margin-bottom:6px}
+.strip>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2.6fr) 150px 86px;gap:14px;align-items:center;padding:9px 12px}
+.strip>summary::-webkit-details-marker{display:none}
+.strip .name{font-weight:650;overflow-wrap:anywhere}
+.strip .latest{color:var(--soft);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.strip .latest b{color:var(--ink);font-weight:600}
+.strip .next{font-size:.93rem;margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.strip .latest.has-state{color:var(--ink)}
+.linehead{font-size:1.14rem;margin:28px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--line)}
+.strip .counts{color:var(--soft);font-size:.9rem;text-align:right;white-space:nowrap}
+/* 新鲜度标尺：圆点越靠右，这个项目越久没动。0–30 天，14 天处是「停滞」线 */
+.ruler{position:relative;height:18px}
+.ruler::before{content:"";position:absolute;left:0;right:0;top:8px;height:2px;background:var(--line)}
+.ruler::after{content:"";position:absolute;left:46.6%;top:3px;height:12px;width:1px;background:var(--soft);opacity:.55}
+.ruler i{position:absolute;top:4px;width:10px;height:10px;border-radius:50%;background:var(--c);transform:translateX(-50%)}
+.ruler.stale i{background:var(--alert)}
+.ruler span{position:absolute;right:0;top:-13px;font-size:.78rem;color:var(--soft)}
+.detail{padding:4px 14px 14px;border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px}
+.detail h3{font-size:.93rem;margin:12px 0 4px;color:var(--soft);font-weight:600}
+.detail ul{margin:0;padding-left:1.1em}
+.detail li{margin-bottom:4px;overflow-wrap:anywhere}
+.small{font-size:.9rem;color:var(--soft)}
+.row{display:grid;grid-template-columns:104px 78px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.row .who{color:var(--soft);font-size:.9rem}
+.day{margin:18px 0 2px;font-weight:700}
+table{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+th{font-weight:600;color:var(--soft);font-size:.9rem;white-space:nowrap}
+td.nw{white-space:nowrap}
+td.name{min-width:150px}
+tr:last-child td{border-bottom:0}
+.task{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:6px}
+.task pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;color:var(--soft);margin:6px 0 0;max-height:220px;overflow:auto}
+.st{font-size:.82rem;padding:1px 7px;border-radius:10px;border:1px solid var(--line);white-space:nowrap}
+.st.done{color:var(--ok);border-color:var(--ok)} .st.failed,.st.blocked{color:var(--alert);border-color:var(--alert)} .st.running{background:var(--ink);color:var(--fog);border-color:var(--ink)}
+.md h1{font-size:1.36rem} .md h2{font-size:1.07rem} .md h3{font-size:1rem;margin:16px 0 4px}
+.md{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px 24px;max-width:78ch}
+.md ul{padding-left:1.2em} .md hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.note{background:var(--wash);border:1px dashed var(--line);border-radius:6px;padding:10px 12px;color:var(--soft)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--fog);padding:8px 14px;border-radius:6px;display:none;max-width:80vw}
+@media (max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.rail-foot{margin:0}.cols,.detail{grid-template-columns:1fr}.strip>summary{grid-template-columns:1fr}.strip .counts{text-align:left}main{padding:18px 14px 50px}.row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="页面">
+    <p class="brand">Todo Hub</p>
+    <p class="when" id="when"></p>
+    <div id="tabs" role="tablist"></div>
+    <div class="rail-foot" id="foot"></div>
+  </nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+"use strict";
+const PSTATUS = {active:"进行中", backlog:"待确认", paused:"暂停", done:"已完成", archived:"已归档"};
+const TSTATUS = {queued:"排队中", running:"运行中", done:"完成", failed:"失败", blocked:"卡住", cancelled:"已取消"};
+const KIND = {git:"git clone", zip:"zip 解压", tool:"全局安装", dotdir:"配置目录", app:"应用", planned:"计划安装"};
+const TABS = [["today","今日"],["projects","项目"],["timeline","时间线"],["swarm","Swarm"],["review","周复盘"],["repos","仓库"]];
+let S = null, tab = location.hash.slice(1) || "today", ui = {showDone:false, showAllProjects:false, repoAll:false, week:null, open:new Set(), todayMode:"line"};
+
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs || {})){
+    if (v === false || v == null) continue;
+    if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "style") el.style.cssText = v; else if (v === true) el.setAttribute(k, ""); else el.setAttribute(k, v);
+  }
+  for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+function put(el, ...kids){ for (const k of kids.flat(Infinity)) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k))); return el; }
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toast.t); toast.t=setTimeout(()=>t.style.display="none",3200); }
+async function api(path, body){
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json","X-Hub":"1"}, body:JSON.stringify(body)} : {});
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText); return j;
+}
+async function emit(type, data, msg){ try{ await api("/api/event",{type,data}); if(msg) toast(msg); await load(); }catch(e){ toast("没写进去："+e.message); } }
+async function runJob(name, msg){ try{ await api("/api/job",{name}); toast(msg); setTimeout(load, 4000); }catch(e){ toast(e.message); } }
+const proj = id => S.projects.find(p => p.id === id);
+const pname = id => (proj(id) || {}).name || "未归类";
+const line = id => S.lines.find(l => l.id === id) || {name:"未归类", color:""};
+const cc = cat => line(cat).color || "";
+const pcat = id => cc((proj(id) || {}).category);
+function fmtDate(ts){ return ts ? dayKey(ts).slice(5) : ""; }
+function fmtTime(ts){ return new Intl.DateTimeFormat("zh-CN",{timeZone:S.timezone,hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(ts)); }
+function dayKey(ts){ return new Intl.DateTimeFormat("sv-SE",{timeZone:S.timezone}).format(new Date(ts)); }
+function addDays(iso, n){ const d=new Date(iso+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+function projectSelect(value, placeholder){
+  const sel = h("select",{class:"field","aria-label":"项目"}, h("option",{value:""}, placeholder || "不归项目"));
+  for (const l of S.lines){
+    const ps = S.projects.filter(p => p.category===l.id && !["archived","done"].includes(p.status));
+    if (ps.length) put(sel, h("optgroup",{label:l.name}, ps.map(p => h("option",{value:p.id, selected:p.id===value}, p.name))));
+  }
+  return sel;
+}
+
+/* ---------- 今日 ---------- */
+function todoRow(t, hideProject){
+  const cb = h("input",{type:"checkbox", checked:t.status==="done", "aria-label":"完成："+t.title,
+    onchange:()=>emit(t.status==="done"?"todo.reopen":"todo.done",{id:t.id}, t.status==="done"?"已恢复":"已完成，下次同步会在提醒事项里打勾")});
+  const sub = h("div",{class:"sub"},
+    t.project && !hideProject && h("span",{}, h("span",{class:"dot "+pcat(t.project)})," ",pname(t.project)),
+    t.thread && h("span",{class:"tag"}, t.thread),
+    t.priority===1 && h("span",{class:"tag hot"},"高优先"),
+    t.source && h("span",{class:"tag", title:"这条 todo 的来源"}, t.source),
+    t.notes && h("span",{}, t.notes.length>90 ? t.notes.slice(0,90)+"…" : t.notes));
+  const tools = h("div",{style:"display:flex;gap:2px;align-items:center"},
+    h("span",{class:"due"}, t.due ? (t.overdue?"逾期 ":"")+t.due.slice(5) : ""),
+    t.status==="open" && (()=>{ const pick = h("input",{type:"date", class:"hidden-date", value:t.due||"", tabindex:"-1", "aria-hidden":"true",
+        onchange:e=>e.target.value && emit("todo.update",{id:t.id,due:e.target.value},"截止日已改")});
+      return [pick, h("button",{class:"btn quiet", onclick:()=>{ try{ pick.showPicker(); }catch(_){ pick.focus(); } }}, t.due ? "改期" : "排期")]; })(),
+    t.status==="open" && h("button",{class:"btn quiet", title:"不做了", onclick:()=>emit("todo.drop",{id:t.id},"已放弃")},"放弃"));
+  return h("div",{class:"todo"+(t.status==="done"?" done":"")+(t.overdue?" late":"")}, cb, h("div",{}, h("div",{class:"t"},t.title), sub.childNodes.length?sub:null), tools);
+}
+function viewToday(){
+  const open = S.todos.filter(t => t.status==="open");
+  const endWeek = addDays(S.today, (7 - (new Date(S.today+"T00:00:00Z").getUTCDay()||7)));
+  const buckets = [["逾期", t=>t.overdue, "late"], ["今天", t=>t.due===S.today], ["本周内", t=>t.due>S.today && t.due<=endWeek],
+                   ["之后", t=>t.due>endWeek], ["没排日期", t=>!t.due]];
+  const title = h("input",{class:"field grow", placeholder:"加一条 todo，回车保存", "aria-label":"新 todo"});
+  const sel = projectSelect(""), due = h("input",{type:"date", class:"field", "aria-label":"截止日"});
+  const submit = ()=>{ if(!title.value.trim()) return; const d={title:title.value.trim(), source:"看板"}; if(sel.value) d.project=sel.value; if(due.value) d.due=due.value; emit("todo.add", d, "已添加"); };
+  title.addEventListener("keydown", e=>{ if(e.key==="Enter") submit(); });
+  const left = h("div",{}, h("div",{class:"add stack"}, title, sel, due, h("button",{class:"btn solid", onclick:submit},"添加")));
+  let any = open.length > 0;
+  const mode = (k, label) => h("button",{class:"btn"+(ui.todayMode===k?" solid":""), "aria-pressed":String(ui.todayMode===k), onclick:()=>{ui.todayMode=k; render();}}, label);
+  put(left, h("div",{class:"add"}, mode("line","按主线"), mode("time","按时间")));
+  if (ui.todayMode === "time"){
+    for (const [label, test, cls] of buckets){
+      const rows = open.filter(test); if(!rows.length) continue;
+      put(left, h("p",{class:"bucket "+(cls||"")}, label+"（"+rows.length+"）"), h("div",{class:"gap"}, rows.map(t => todoRow(t))));
+    }
+  } else {
+    const byDue = (a,b) => (a.due||"9999").localeCompare(b.due||"9999") || (a.priority||2)-(b.priority||2);
+    for (const l of S.lines){
+      const ps = S.projects.filter(p => p.category===l.id && open.some(t => t.project===p.id)); if(!ps.length) continue;
+      put(left, h("h2",{class:"linehead"}, h("span",{class:"dot "+l.color})," "+l.name));
+      for (const p of ps){
+        const rows = open.filter(t => t.project===p.id).sort(byDue);
+        put(left, h("p",{class:"bucket"}, p.name+"（"+rows.length+"）"), h("div",{class:"gap"}, rows.map(t => todoRow(t, true))));
+      }
+    }
+    const loose = open.filter(t => !t.project || !proj(t.project)).sort(byDue);
+    if (loose.length) put(left, h("h2",{class:"linehead"},"还没归到项目"), h("div",{class:"gap"}, loose.map(t => todoRow(t))));
+  }
+  if(!any) put(left, h("p",{class:"note"},"没有未完成的 todo。在上面加一条，或者在 iPhone「提醒事项」的 Todo Hub 列表里加，下次同步会进来。"));
+  const done = S.todos.filter(t => t.status==="done").sort((a,b)=>(b.done_at||"").localeCompare(a.done_at||"")).slice(0,15);
+  if(done.length) put(left, h("button",{class:"btn quiet", onclick:()=>{ui.showDone=!ui.showDone; render();}}, ui.showDone?"收起已完成":"看最近完成的 "+done.length+" 条"), ui.showDone && h("div",{style:"margin-top:8px"}, done.map(t => todoRow(t))));
+
+  const right = h("div",{});
+  const recent = S.projects.flatMap(p => p.progress.map(g => ({...g, pid:p.id}))).sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,8);
+  put(right, h("h2",{style:"margin-top:0"},"最近的项目进展"));
+  put(right, recent.length ? recent.map(g => h("div",{class:"row", style:"grid-template-columns:52px minmax(0,1fr)"}, h("span",{class:"who"}, g.date.slice(5)),
+      h("div",{}, h("span",{class:"dot "+pcat(g.pid)})," ", h("b",{},pname(g.pid)),"　",g.text, g.source && h("span",{class:"small"},"　"+g.source))))
+    : h("p",{class:"note"},"还没有进展记录。每晚的更新任务会根据当天的对话和会话写进来。"));
+  const stale = S.projects.filter(p => p.stale).sort((a,b)=>b.idle_days-a.idle_days);
+  if(stale.length) put(right, h("h2",{},"两周以上没动的项目"), stale.map(p => h("div",{class:"row", style:"grid-template-columns:52px minmax(0,1fr)"}, h("span",{class:"who"}, p.idle_days+" 天"), h("div",{}, h("span",{class:"dot "+cc(p.category)})," ",p.name))));
+  const live = S.tasks.filter(k => ["queued","running","blocked","failed"].includes(k.status)).slice(0,6);
+  if(live.length) put(right, h("h2",{},"Swarm 里还没收尾的任务"), live.map(k => h("div",{class:"row", style:"grid-template-columns:64px minmax(0,1fr)"}, h("span",{class:"st "+k.status}, TSTATUS[k.status]), h("div",{}, k.agent+"："+k.title))));
+  return [h("h1",{}, "今日 "+S.today.slice(5)), h("p",{class:"lede"}, open.length+" 条未完成"+(open.some(t=>t.overdue)?"，其中 "+open.filter(t=>t.overdue).length+" 条逾期":"")+"。打勾会同步到提醒事项。"), h("div",{class:"cols"}, left, right)];
+}
+
+/* ---------- 项目 ---------- */
+function strip(p){
+  const last = p.progress[p.progress.length-1];
+  const idle = p.idle_days == null ? 30 : Math.min(p.idle_days, 30);
+  const d = h("details",{class:"strip "+cc(p.category), open:ui.open.has(p.id), ontoggle:e=>{ e.target.open ? ui.open.add(p.id) : ui.open.delete(p.id); }});
+  put(d, h("summary",{},
+    h("div",{}, h("div",{class:"name"}, p.name), h("div",{class:"small"}, PSTATUS[p.status])),
+    h("div",{}, h("div",{class:"latest"}, p.state ? p.state : last ? [h("b",{}, last.date.slice(5)+"　"), last.text] : (p.summary || "还没有进展记录")),
+      p.next && h("div",{class:"next"}, h("b",{},"下一步　"), p.next)),
+    p.idle_days == null ? h("div",{class:"small", style:"text-align:right"},"无活动记录")
+      : h("div",{class:"ruler"+(p.stale?" stale":""), title:"距最近一次活动 "+p.idle_days+" 天；竖线是 14 天"}, h("i",{style:"left:"+(idle/30*100)+"%"}), h("span",{}, p.idle_days===0 ? "今天" : p.idle_days+" 天前")),
+    h("div",{class:"counts"}, p.open_todos+" todo", h("br"), p.session_count+" 会话")));
+  const todos = S.todos.filter(t => t.project===p.id && t.status==="open");
+  const note = h("textarea",{class:"field", rows:"2", style:"width:100%", placeholder:"手动记一条进展", "aria-label":"进展内容"});
+  const leftCol = h("div",{},
+    p.goal && h("p",{style:"margin:10px 0 0"}, h("b",{},"目标　"), p.goal),
+    p.summary && h("p",{class:"small", style:"margin:6px 0 0"}, p.summary),
+    p.threads.length ? h("p",{class:"small", style:"margin:6px 0 0"}, "子线　", p.threads.map(x => h("span",{class:"tag", style:"margin-right:4px"}, x))) : null,
+    h("h3",{},"进展记录（最近 "+p.progress.length+" / 共 "+p.progress_count+" 条）"),
+    p.progress.length ? h("ul",{}, [...p.progress].reverse().map(g => h("li",{}, h("b",{}, g.date.slice(5)+"　"), g.thread && [h("span",{class:"tag"}, g.thread)," "], g.text, h("span",{class:"small"}, "　"+[g.source, g.actor].filter(Boolean).join("，")),
+        (g.links||[]).map(u => [" ", h("a",{href:u, target:"_blank", rel:"noopener"},"原对话")])))) : h("p",{class:"small"},"暂无"),
+    h("div",{style:"display:flex;gap:8px;margin-top:8px;align-items:flex-start"}, note, h("button",{class:"btn", onclick:()=>note.value.trim() && emit("project.progress",{project:p.id,text:note.value.trim(),source:"手动"},"已记录")},"记录")),
+    h("h3",{},"未完成的 todo"), todos.length ? todos.map(t => todoRow(t, true)) : h("p",{class:"small"},"没有"));
+  const statusSel = h("select",{class:"field", "aria-label":"项目状态", onchange:e=>emit("project.upsert",{id:p.id,status:e.target.value},"状态已改")}, Object.entries(PSTATUS).map(([k,v]) => h("option",{value:k, selected:k===p.status}, v)));
+  const rightCol = h("div",{},
+    h("h3",{},"本机 agent 会话"),
+    p.sessions.length ? h("ul",{}, [...p.sessions].reverse().map(s => h("li",{}, h("b",{}, fmtDate(s.ended||s.started)+"　"+s.source), "　", s.title || (s.prompts||[])[0] || "（无提问文本）", s.last_message && h("div",{class:"small"}, "结论："+s.last_message.slice(0,220))))) : h("p",{class:"small"}, p.paths.length ? "这些目录下还没有采集到会话" : "没登记本机目录，会话无法自动归到这里"),
+    p.commits.length ? [h("h3",{},"最近提交"), h("ul",{}, p.commits.map(c => h("li",{}, fmtDate(c.ts)+"　"+c.subject)))] : null,
+    h("h3",{},"本机目录"), p.paths.length ? h("ul",{}, p.paths.map(x => h("li",{class:"small"}, x))) : h("p",{class:"small"},"未登记"),
+    h("h3",{},"状态"), statusSel);
+  put(d, h("div",{class:"detail"}, leftCol, rightCol));
+  return d;
+}
+function viewProjects(){
+  const out = [h("h1",{},"项目"), h("p",{class:"lede"},"第一层是主线，第二层是主线里持续推进的项目；具体标的和工作线是项目里的子线。每行写的是现状和下一步，右侧标尺是距最近一次活动的天数，过了竖线（14 天）算停滞。")];
+  const shown = S.projects.filter(p => ui.showAllProjects || p.status==="active");
+  for (const l of S.lines){
+    const ps = shown.filter(p => p.category===l.id).sort((a,b)=>(a.status==="active"?0:1)-(b.status==="active"?0:1) || (a.idle_days??99)-(b.idle_days??99));
+    if(ps.length) out.push(h("h2",{class:"linehead"}, h("span",{class:"dot "+l.color})," "+l.name, l.note && h("span",{class:"small", style:"font-weight:400"}, "　"+l.note)), ps.map(strip));
+  }
+  const orphan = shown.filter(p => !S.lines.some(l => l.id===p.category));
+  if (orphan.length) out.push(h("h2",{class:"linehead"},"主线未定"), orphan.map(strip));
+  const hidden = S.projects.length - S.projects.filter(p=>p.status==="active").length;
+  out.push(h("p",{style:"margin-top:14px"}, h("button",{class:"btn", onclick:()=>{ui.showAllProjects=!ui.showAllProjects; render();}}, ui.showAllProjects ? "只看进行中" : "显示其余 "+hidden+" 个（待确认 / 暂停 / 归档）")));
+  if (S.unmapped_sessions.length){
+    const byCwd = {}; for (const s of S.unmapped_sessions) (byCwd[s.cwd||"?"] ||= []).push(s);
+    out.push(h("h2",{},"没归到项目的会话"), h("p",{class:"small"},"选一个项目，这个目录以后的会话都会自动归过去。"),
+      h("table",{}, h("tbody",{}, Object.entries(byCwd).map(([cwd, ss]) => { const sel = projectSelect("", "归到…");
+        sel.addEventListener("change", ()=> sel.value && emit("project.upsert",{id:sel.value, add_paths:[cwd]}, "已归类"));
+        return h("tr",{}, h("td",{}, cwd, h("div",{class:"small"}, ss.length+" 个会话，最近："+((ss[ss.length-1].prompts||[])[0]||"").slice(0,80))), h("td",{style:"width:200px"}, sel)); }))));
+  }
+  return out;
+}
+
+/* ---------- 时间线 ---------- */
+async function viewTimeline(){
+  const rows = await api("/api/timeline?days=14");
+  const out = [h("h1",{},"时间线"), h("p",{class:"lede"},"最近 14 天所有记录，按天倒序：进展、todo 变化、派单结果、各 agent 的会话。")];
+  if(!rows.length) out.push(h("p",{class:"note"},"这 14 天还没有记录。"));
+  let cur = "";
+  for (const r of rows){
+    const k = dayKey(r.ts);
+    if (k !== cur){ cur = k; out.push(h("p",{class:"day"}, k + (k===S.today ? "　今天" : ""))); }
+    out.push(h("div",{class:"row"}, h("span",{class:"who"}, fmtTime(r.ts)+"　"+r.kind), h("span",{class:"who"}, r.actor), h("div",{}, r.project && [h("span",{class:"dot "+pcat(r.project)})," ",h("b",{},pname(r.project)),"　"], (r.text||"").slice(0,260))));
+  }
+  return out;
+}
+
+/* ---------- Swarm ---------- */
+function viewSwarm(){
+  const paused = !!S.meta.swarm_paused;
+  const agent = h("select",{class:"field","aria-label":"交给谁"}, Object.entries(S.agents).filter(([,a])=>a.enabled && !a.maintenance).map(([k,a]) => h("option",{value:k}, a.label)));
+  const sel = projectSelect(""), title = h("input",{class:"field grow", placeholder:"任务标题"}), prompt = h("textarea",{class:"field", rows:"4", style:"width:100%", placeholder:"要它做什么、交付什么。写清楚验收标准。"});
+  const out = [h("h1",{},"Swarm"), h("p",{class:"lede"}, "Claude 是编排者：每晚读当天的对话和会话，更新进展，并把能交出去的事派给下面这些 agent。当前模式："+(S.dispatch_mode==="auto"?"入队即自动执行":"入队后等你放行")+(paused?"。现在已暂停，排队的任务不会被执行。":"。")),
+    h("p",{}, h("button",{class:"btn"+(paused?" solid":""), onclick:()=>emit("meta.set",{key:"swarm_paused",value:!paused}, paused?"已恢复派单":"已暂停派单")}, paused?"恢复派单":"暂停派单")),
+    h("table",{}, h("thead",{}, h("tr",{}, h("th",{},"Agent"), h("th",{},"怎么接任务"), h("th",{},"排队"), h("th",{},"累计完成"))),
+      h("tbody",{}, Object.entries(S.agents).map(([k,a]) => h("tr",{}, h("td",{}, a.label+(a.enabled?"":"（未启用）")),
+        h("td",{class:"small"}, {cli:"本机命令行，守护进程直接调起", mailbox:"它自己定时来取件（hub task next）", orchestrator:"每晚定时任务里处理"}[a.kind]||a.kind),
+        h("td",{}, S.tasks.filter(t=>t.agent===k && t.status==="queued").length), h("td",{}, S.tasks.filter(t=>t.agent===k && t.status==="done").length))))),
+    h("h2",{},"手动派一个任务"), h("div",{class:"add"}, agent, sel, title), prompt,
+    h("p",{}, h("button",{class:"btn solid", onclick:()=>{ if(!title.value.trim()||!prompt.value.trim()) return toast("标题和内容都要填"); const d={agent:agent.value,title:title.value.trim(),prompt:prompt.value.trim()}; if(sel.value) d.project=sel.value; emit("task.create", d, "已入队"); }},"入队")),
+    h("h2",{},"任务记录")];
+  if(!S.tasks.length) out.push(h("p",{class:"note"},"还没有派过任务。"));
+  for (const k of S.tasks.slice(0,40)){
+    out.push(h("div",{class:"task"}, h("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap"}, h("span",{class:"st "+k.status}, TSTATUS[k.status]), h("b",{}, k.title), h("span",{class:"small"}, (S.agents[k.agent]||{}).label||k.agent), k.project && h("span",{class:"small"}, pname(k.project)), h("span",{class:"small"}, k.id+"　"+fmtDate(k.created)+" 由 "+k.by+" 派出"),
+        k.status==="queued" && S.dispatch_mode!=="auto" && !S.meta["approved:"+k.id] && h("button",{class:"btn", onclick:()=>emit("meta.set",{key:"approved:"+k.id,value:true},"已放行")},"放行"),
+        ["queued","running"].includes(k.status) && h("button",{class:"btn quiet", onclick:()=>emit("task.status",{id:k.id,status:"cancelled"},"已取消")},"取消"),
+        ["failed","blocked","cancelled"].includes(k.status) && h("button",{class:"btn quiet", onclick:()=>emit("task.status",{id:k.id,status:"queued"},"已重新入队")},"重试")),
+      h("details",{}, h("summary",{class:"small"},"任务内容"), h("pre",{}, k.prompt + (k.acceptance ? "\n\n验收："+k.acceptance : ""))),
+      k.summary && h("pre",{}, k.summary)));
+  }
+  return out;
+}
+
+/* ---------- 周复盘 ---------- */
+function md(text){
+  const root = h("div",{class:"md"}); let ul = null;
+  const inline = s => s.split(/(\*\*[^*]+\*\*)/).map(part => part.startsWith("**") ? h("b",{}, part.slice(2,-2)) : part);
+  for (const line of text.split("\n")){
+    const m = /^(#{1,3})\s+(.*)/.exec(line);
+    if (m){ ul = null; put(root, h("h"+m[1].length,{}, inline(m[2]))); }
+    else if (/^\s*-\s+/.test(line)){ if(!ul) put(root, ul = h("ul",{})); put(ul, h("li",{}, inline(line.replace(/^\s*-\s+/,"")))); }
+    else if (/^---+$/.test(line.trim())){ ul = null; put(root, h("hr",{})); }
+    else if (line.trim()){ ul = null; put(root, h("p",{}, inline(line.replace(/^_(.*)_$/,"$1")))); }
+  }
+  return root;
+}
+async function viewReview(){
+  const weeks = [...new Set([S.week, ...S.reviews.map(r => r.week)])];
+  const week = ui.week || S.week;
+  const r = await api("/api/review?week="+encodeURIComponent(week));
+  return [h("h1",{},"周复盘"), h("p",{class:"lede"},"数字部分随时可以重新生成；最上面的判断部分由 Claude 每周日晚上写。"),
+    h("div",{class:"add"}, h("select",{class:"field","aria-label":"哪一周", onchange:e=>{ui.week=e.target.value; render();}}, weeks.map(w => h("option",{value:w, selected:w===week}, w+(w===S.week?"（本周）":"")))),
+      h("button",{class:"btn", onclick:()=>runJob("review","正在重新生成本周复盘")},"重新生成本周")), md(r.text)];
+}
+
+/* ---------- 仓库 ---------- */
+function viewRepos(){
+  const rows = S.repos.filter(r => ui.repoAll || r.ai || r.kind==="planned" || r.note);
+  const url = h("input",{class:"field grow", placeholder:"仓库地址或名字，例如 https://github.com/owner/repo"}), note = h("input",{class:"field grow", placeholder:"为什么想装（可不填）"});
+  const plan = ()=>{ const v=url.value.trim(); if(!v) return; let key, u="";
+    if (v.includes("/")){ u = v.replace(/^git@([^:]+):/,"https://$1/").replace(/\.git\/?$/,"").replace(/\/$/,""); key = u.replace(/^https?:\/\/(www\.)?/,"").toLowerCase(); } else key = "planned:"+v.toLowerCase();
+    const d = {key, status:"planned", name:v.replace(/\/$/,"").split("/").pop()}; if(u) d.url=u; if(note.value.trim()) d.note=note.value.trim(); emit("repo.note", d, "已登记"); };
+  const stateText = r => r.state==="planned" ? "计划安装" : r.state==="missing" ? "已不在本机" : (r.was_planned ? "已安装（原计划）" : "已安装");
+  return [h("h1",{},"本机 AI 仓库与工具"), h("p",{class:"lede"},"记录这台电脑上 clone、解压或全局安装过的 AI 相关项目：从哪来、哪个版本、什么时候第一次出现。上次扫描："+(S.repos_scanned_at ? fmtDate(S.repos_scanned_at)+" "+fmtTime(S.repos_scanned_at) : "还没扫过")+"。"),
+    h("div",{class:"add"}, url, note, h("button",{class:"btn solid", onclick:plan},"登记想装的"), h("button",{class:"btn", onclick:()=>runJob("screener","正在扫描，稍后自动刷新")},"重新扫描"),
+      h("label",{class:"small", style:"display:flex;gap:6px;align-items:center"}, h("input",{type:"checkbox", checked:ui.repoAll, onchange:e=>{ui.repoAll=e.target.checked; render();}}),"显示非 AI 相关的")),
+    rows.length ? h("table",{}, h("thead",{}, h("tr",{}, ["名称","怎么装的","状态","版本","首次发现","来源 / 位置","备注"].map(x => h("th",{}, x)))),
+      h("tbody",{}, rows.map(r => { const n = r.note || {}, o = r.online || {};
+        return h("tr",{}, h("td",{class:"name"}, h("b",{}, r.name), r.own && h("div",{class:"small"},"自己的仓库"), o.description && h("div",{class:"small"}, o.description.slice(0,90))),
+          h("td",{class:"small nw"}, KIND[r.kind] + (r.manager ? "（"+r.manager+"）" : "")),
+          h("td",{class:"nw"}, h("span",{class:"st "+(r.state==="installed"?"done":r.state==="missing"?"failed":"")}, stateText(r))),
+          h("td",{class:"small nw"}, r.commit || r.version || (r.kind==="zip" ? "未知（无 .git）" : ""), r.branch && h("div",{}, r.branch), (r.history||[]).length ? h("div",{}, "变更 "+r.history.length+" 次") : null),
+          h("td",{class:"small nw"}, fmtDate(r.first_seen)),
+          h("td",{class:"small"}, r.url && h("div",{}, h("a",{href:r.url, target:"_blank", rel:"noopener"}, r.url.replace(/^https?:\/\//,""))), (r.paths||[]).slice(0,2).map(p => h("div",{}, p)), o.stars!=null && h("div",{}, "★ "+o.stars+(o.archived?"，已归档":"")+(o.license?"，"+o.license:""))),
+          h("td",{class:"small"}, n.audit && h("div",{}, "审计："+n.audit.verdict+(n.audit.commit?" @ "+n.audit.commit:"")), n.note, (n.tags||[]).map(t => h("span",{class:"tag"}, t)))); })))
+      : h("p",{class:"note"},"登记表还是空的。点「重新扫描」，或者先登记一个打算装的。")];
+}
+
+/* ---------- 框架 ---------- */
+const VIEWS = {today:viewToday, projects:viewProjects, timeline:viewTimeline, swarm:viewSwarm, review:viewReview, repos:viewRepos};
+async function render(){
+  if(!S) return;
+  const open = S.todos.filter(t => t.status==="open").length;
+  const counts = {today:open, projects:S.projects.filter(p=>p.status==="active").length, swarm:S.tasks.filter(k=>["queued","running"].includes(k.status)).length || "", repos:S.repos.filter(r=>r.ai||r.kind==="planned").length};
+  $("when").textContent = S.today + "　" + S.week.slice(5);
+  $("tabs").replaceChildren(...TABS.map(([k,label]) => h("button",{class:"tab", role:"tab", "aria-selected":String(k===tab), onclick:()=>{tab=k; location.hash=k; render();}}, label, h("span",{class:"n"}, counts[k] ?? ""))));
+  const rl = S.reminders_last;
+  $("foot").replaceChildren(h("div",{}, "提醒事项："+(rl ? fmtDate(rl.at)+" "+fmtTime(rl.at)+" 同步过" : "还没同步过")), h("button",{class:"btn", onclick:()=>runJob("reminders","正在同步提醒事项")},"同步提醒事项"), h("button",{class:"btn", onclick:()=>runJob("collect","正在采集会话")},"采集会话"));
+  const y = window.scrollY, nodes = await VIEWS[tab]();
+  $("main").replaceChildren(...[nodes].flat(Infinity).filter(Boolean)); window.scrollTo(0, y);
+}
+async function load(){ try{ S = await api("/api/state"); await render(); }catch(e){ if(!S) $("main").replaceChildren(h("p",{class:"note"},"连不上本机服务："+e.message+"。在终端运行 hub daemon 后刷新。")); } }
+load(); setInterval(()=>{ if(!document.querySelector("input:focus,textarea:focus,select:focus")) load(); }, 30000);
+</script>
+</body>
+</html>

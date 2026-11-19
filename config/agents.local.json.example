@@ -1,0 +1,9 @@
+{
+ "local": {
+  "label": "Local model",
+  "kind": "cli",
+  "enabled": true,
+  "model": "qwen3:14b",
+  "cmd": ["ollama", "run", "{model}", "{prompt}"]
+ }
+}

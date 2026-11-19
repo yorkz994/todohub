@@ -1,0 +1,35 @@
+{
+ "_note": "Example top-level areas. Your own go in config/taxonomy.local.json (git-ignored), which replaces this file when present. 示例主线；你自己的写在 config/taxonomy.local.json（不进仓库），存在时整份替代本文件。",
+ "lines": [
+  {
+   "id": "work",
+   "name": "工作",
+   "note": "主业",
+   "color": "invest"
+  },
+  {
+   "id": "research",
+   "name": "研究",
+   "note": "调研、学习、写作",
+   "color": "research"
+  },
+  {
+   "id": "projects",
+   "name": "项目",
+   "note": "副业和合作项目",
+   "color": "bd"
+  },
+  {
+   "id": "ops",
+   "name": "系统与工具",
+   "note": "支撑上面几条线的基础设施",
+   "color": "coding"
+  },
+  {
+   "id": "personal",
+   "name": "个人",
+   "note": "",
+   "color": "personal"
+  }
+ ]
+}

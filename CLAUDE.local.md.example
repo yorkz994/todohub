@@ -1,0 +1,14 @@
+# Personal notes for the orchestrator (copy to CLAUDE.local.md; git-ignored)
+
+## Who I am
+Alex, product engineer, based in Berlin (Europe/Berlin). "The user" in CLAUDE.md means me.
+
+## Areas
+`work` – day job; `research` – reading and writing; `projects` – side projects; `ops` – tooling; `personal`.
+Defined in `config/taxonomy.local.json`.
+
+## Reminders tags
+In my adopted Reminders list, `[W]` → `work`, `[R]` → `research`.
+
+## Paths
+This folder is `~/code/todohub` on my Mac.
